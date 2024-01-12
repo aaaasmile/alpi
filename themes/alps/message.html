@@ -1,0 +1,235 @@
+{{template "head.html" .}}
+{{template "nav.html" .}}
+{{template "util.html" .}}
+
+<div class="page-wrap">
+  {{ $current := .Mailbox }}
+  {{ template "aside" . }}
+  <div class="container">
+    <main class="message">
+      <section class="actions">
+        <div class="actions-wrap">
+          <div class="actions-message">
+            {{$back := printf "%v?page=%v" .Mailbox.URL .MailboxPage}}
+            <a href="{{$back}}" class="button-link">« Back</a>
+
+            {{ if and (ne .Mailbox.Name "Archive") (ne .Mailbox.Name "Drafts") (ne .Mailbox.Name "Sent") }}
+            <form class="action-group" method="post" action="/message/{{.Mailbox.Name | pathescape}}/move">
+              <input type="hidden" name="uids" value="{{.Message.Uid}}">
+              <input type="hidden" name="to" value="Archive">
+              <input type="hidden" name="next" value="{{$back}}">
+              <button>Archive</button>
+            </form>
+            {{ end }}
+
+            {{ if and (ne .Mailbox.Name "INBOX") (ne .Mailbox.Name "Sent") (ne .Mailbox.Name "Drafts") }}
+            <form class="action-group" method="post" action="/message/{{.Mailbox.Name | pathescape}}/move">
+              <input type="hidden" name="uids" value="{{.Message.Uid}}">
+              <input type="hidden" name="to" value="INBOX">
+              <button>
+              {{ if (eq .Mailbox.Name "Junk") }}
+              Not Spam
+              {{ else }}
+              Move to Inbox
+              {{ end }}
+              </button>
+            </form>
+            {{ end }}
+
+            {{ if or (eq .Mailbox.Name "INBOX") (eq .Mailbox.Name "Trash") }}
+            <form class="action-group" method="post" action="/message/{{.Mailbox.Name | pathescape}}/move">
+              <input type="hidden" name="uids" value="{{.Message.Uid}}">
+              <input type="hidden" name="next" value="{{$back}}">
+              <input type="hidden" name="to" value="Junk">
+              <button>Report Spam</button>
+            </form>
+            {{ end }}
+
+            {{ if or (eq .Mailbox.Name "Trash") (eq .Mailbox.Name "Junk") }}
+            <form class="action-group" method="post" action="/message/{{.Mailbox.Name | pathescape}}/delete">
+              <input type="hidden" name="uids" value="{{.Message.Uid}}">
+              <input type="hidden" name="next" value="{{$back}}">
+              <button>Delete Permanently</button>
+            </form>
+            {{ else }}
+            <form class="action-group" method="post" action="/message/{{.Mailbox.Name | pathescape}}/move">
+              <input type="hidden" name="uids" value="{{.Message.Uid}}">
+              <input type="hidden" name="next" value="{{$back}}">
+              <input type="hidden" name="to" value="Trash">
+              <button>Delete</button>
+            </form>
+            {{ end }}
+
+            <form class="action-group" method="post" action="/message/{{.Mailbox.Name | pathescape}}/flag">
+              <input type="hidden" name="uids" value="{{.Message.Uid}}">
+              <input type="hidden" name="action" value="remove">
+              <input type="hidden" name="flags" value="\Seen">
+              <input type="hidden" name="next" value="{{$back}}">
+              <button>Mark&nbsp;Unread</button>
+            </form>
+
+            <form class="action-group" method="post" action="/message/{{.Mailbox.Name | pathescape}}/move">
+              <input type="hidden" name="uids" value="{{.Message.Uid}}">
+              <select class="action-group" name="to">
+                {{range .Mailboxes}}
+                  <option value="{{.Name}}" {{if eq .Name $.Mailbox.Name}}selected>Move to...{{else}}>{{.Name}}{{ end }}</option>
+                {{end}}
+              </select>
+              <button class="action-group" type="submit">Move</button>
+            </form>
+
+            <span class="followups action-group">
+              {{if .Message.HasFlag "\\Draft"}}
+                <a class="action-group button-link" href="{{.Message.URL}}/edit{{if .Message.TextPart}}?part={{.Message.TextPart.PathString}}{{end}}">Edit draft</a>
+              {{else}}
+                <a class="action-group button-link" href="{{.Message.URL}}/reply{{if .Message.TextPart}}?part={{.Message.TextPart.PathString}}{{end}}">Reply</a>
+                <a class="action-group button-link" href="{{.Message.URL}}/forward{{if .Message.TextPart}}?part={{.Message.TextPart.PathString}}{{end}}">Forward</a>
+              {{end}}
+            </span>
+
+            <span class="action-group">
+              <a
+                class="action-group button-link"
+                id="print"
+                href="#"
+                style="display: none"
+              >Print</a>
+            </span>
+          </div>
+        </div>
+      </section>
+
+      <div class="message-header">
+        <table>
+          <tr>
+            <th colspan="2">
+              <h1>
+               {{if .Message.Envelope.Subject}}
+                  {{.Message.Envelope.Subject}}
+                {{else}}
+                  (No subject)
+                {{end}}
+              </h1>
+            </th>
+          </tr>
+          <tr>
+            <th>From:</th>
+            <td>{{template "addr-list" .Message.Envelope.From}}</td>
+          </tr>
+          <tr>
+            <th>Date:</th>
+            <td>{{.Message.Envelope.Date | formatdate}}</td>
+          </tr>
+          <tr>
+            <th>To:</th><td>{{template "addr-list" .Message.Envelope.To}}</td>
+          </tr>
+          {{if .Message.Envelope.Cc}}
+          <tr>
+            <th>Cc:</th><td>{{template "addr-list" .Message.Envelope.Cc}}</td>
+          </tr>
+          {{end}}
+          {{if .Message.Envelope.Bcc}}
+          <tr>
+            <th>Bcc:</th>
+            <td>{{template "addr-list" .Message.Envelope.Bcc}}</td>
+          </tr>
+          {{ end }}
+          {{if and .Extra.HasRemoteResources (not .Extra.RemoteResourcesAllowed)}}
+          <tr class="remote-content">
+            <td colspan="2">
+              This message contains remote content, such as external images.
+              <a href="?part={{.Part.PathString}}&allow-remote-resources=1">
+                Load remote content »
+              </a>
+            </td>
+          </tr>
+          {{end}}
+        </table>
+        {{ $attachments := .Message.Attachments }}
+        {{ if $attachments }}
+        <section class="parts">
+          <h3>Attachments</h3>
+          <ul>
+            {{ range .Message.Attachments }}
+            <li>
+              <a
+                class="nav-link"
+                {{if .IsText}}
+                  href="?part={{.PathString}}"
+                {{else}}
+                  href="{{$.Message.URL}}/raw?part={{.PathString}}"
+                {{end}}
+              >
+              {{- if .Filename -}}
+                {{.Filename}}
+              {{- else -}}
+                (no filename)
+              {{- end -}}
+              </a> ({{.MIMEType}}, {{.SizeString}})
+            </li>
+            {{ end }}
+          </ul>
+        </section>
+        {{ end }}
+      </div>
+
+      {{define "addr-list"}}
+        {{range $i, $addr := .}}
+          {{if $i}},{{end}}
+          <strong>{{.PersonalName}}</strong>
+          &lt;<a href="/compose?to={{.Address}}">{{.Address}}</a>&gt;
+        {{end}}
+      {{end}}
+
+      {{ $html := .Message.HTMLPart }}
+      {{ $text := .Message.TextPart }}
+      {{ $calendar := .Message.CalendarPart }}
+      <div class="tabs">
+        {{ if $text }}
+        {{/* https://github.com/golang/go/issues/31103 */}}
+        <a
+          href="?part={{$text.PathString}}"
+          {{ if eq $text.PathString .Part.PathString }}
+          class="active"
+          {{ end }}
+        >
+        {{ if eq $text.MIMEType "text/html" }}
+        HTML
+        {{ else }}
+        Plain text
+        {{ end }}
+        </a>
+        {{ if $html }}
+        {{ if ne $html.PathString $text.PathString }}
+        <a
+          href="?part={{$html.PathString}}"
+          {{ if eq $html.PathString .Part.PathString }}
+          class="active"
+          {{ end }}
+        >HTML</a>
+        {{ end }}
+        {{ end }}
+        {{ end }}
+        {{ if $calendar }}
+        <a
+          href="?part={{$calendar.PathString}}"
+          {{ if eq $calendar.PathString .Part.PathString }}
+          class="active"
+          {{ end }}
+        >Calendar</a>
+        {{ end}}
+        <a href="{{.Message.URL}}/raw?plain=1">Raw email</a>
+      </div>
+
+      {{if .View}}
+        {{.View}}
+      {{else}}
+        <p>Can't preview this message part.</p>
+        <a href="{{.Message.URL}}/raw?part={{.Part.PathString}}">Download</a>
+      {{end}}
+    </main>
+  </div>
+</div>
+<script src="/themes/alps/assets/print.js"></script>
+
+{{template "foot.html"}}

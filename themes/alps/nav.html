@@ -1,0 +1,47 @@
+<header>
+  <nav>
+    {{$page := (index .GlobalData.Path 0)}}
+    <a href="/"
+      {{ if or (eq $page "mailbox") (eq $page "message") (eq $page "compose") }}
+      class="active"
+      {{ end }}
+    >Email</a>
+    {{ if call .GlobalData.HavePlugin "caldav" }}
+    <a
+      href="/calendar"
+      {{ if eq $page "calendar" }}
+      class="active"
+      {{ end }}
+    >Calendar</a>
+    {{ end }}
+    {{ if call .GlobalData.HavePlugin "carddav" }}
+    <a
+      href="/contacts"
+      {{ if eq $page "contacts" }}
+      class="active"
+      {{ end }}
+    >Contacts</a>
+    {{ end }}
+    {{ if call .GlobalData.HavePlugin "managesieve" }}
+    <a
+      href="/filters"
+      {{ if eq $page "filters" }}
+      class="active"
+      {{ end }}
+    >Filters</a>
+    {{ end }}
+    {{ if .GlobalData.LoggedIn }}
+    <div>
+      <span>{{ .GlobalData.Username }}</span>
+      <a href="/settings">Settings</a>
+      <a href="/logout">Sign Out</a>
+    </div>
+    {{ end }}
+  </nav>
+  {{ if .GlobalData.Notice }}
+  <div class="notice">
+    {{ .GlobalData.Notice }}
+    <a href="{{.GlobalData.URL.String}}">Dismiss</a>
+  </div>
+  {{ end }}
+</header>

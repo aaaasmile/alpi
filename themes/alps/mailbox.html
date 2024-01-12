@@ -1,0 +1,105 @@
+{{template "head.html" .}}
+{{template "nav.html" .}}
+{{template "util.html" .}}
+
+<div class="page-wrap">
+  {{ template "aside" . }}
+  <div class="container">
+    <form id="messages-form" method="POST"></form>
+    <main class="message-list">
+      <section class="actions">
+        {{ template "messages-header.html" . }}
+      </section>
+      <section class="messages">
+        <div class="message-grid">
+          {{range .Messages}}
+          {{ $classes := "message-list-item" }}
+          {{ if not (.HasFlag "\\Seen") }}
+          {{ $classes = printf "%s %s" $classes "message-list-unread" }}
+          {{ end }}
+          {{ if (.HasFlag "\\Deleted") }}
+          {{ $classes = printf "%s %s" $classes "message-list-deleted" }}
+          {{ end }}
+
+          {{ if and (not (.HasFlag "\\Deleted")) .Envelope }}
+          <div class="message-list-checkbox {{$classes}}">
+            <input type="checkbox" name="uids" value="{{.Uid}}" form="messages-form">
+          </div>
+          <div class="message-list-addresses {{$classes}}">
+            {{ $field := "from" }}
+            {{ $addresses := .Envelope.From }}
+
+            {{ if $.CategorizedMailboxes.Common.Sent }}
+            {{ if eq $.Mailbox.Name $.CategorizedMailboxes.Common.Sent.Info.Name }}
+            {{ $field = "to" }}
+            {{ $addresses = .Envelope.To }}
+            {{end}}
+            {{end}}
+
+            {{ range $addresses }}
+            <a href='?query={{$field}}:"{{.MailboxName}}@{{.HostName}}"'>
+            {{ if .PersonalName }}
+              {{.PersonalName}}
+            {{ else }}
+              {{.MailboxName}}@{{.HostName}}
+            {{ end }}
+            </a>
+            {{ end }}
+          </div>
+          <div class="message-list-flags {{$classes}}">
+            {{if .Attachments}}<span class="Has attachments">📎</span>{{end}}
+            {{if .HasFlag "\\Answered"}}<span class="Replied">↩</span>{{end}}
+            {{if .HasFlag "$Forwarded"}}<span class="Forwarded">↪</span>{{end}}
+            <form method="POST" action="/message/{{.Mailbox}}/flag">
+              <input type="hidden" name="uids" value="{{.Message.Uid}}">
+              {{ if .HasFlag "\\Flagged" -}}
+              <input type="hidden" name="action" value="remove">
+              {{ else }}
+              <input type="hidden" name="action" value="add">
+              {{ end }}
+              <input type="hidden" name="flags" value="\Flagged">
+              <input type="hidden" name="next" value="{{$.GlobalData.URL.Path}}">
+              <button class="flag-button button-link" type="submit">
+                {{- if .HasFlag "\\Flagged" -}}
+                ★
+                {{- else -}}
+                ☆
+                {{- end -}}
+              </button>
+            </form>
+          </div>
+          <div class="message-list-subject {{$classes}}">
+            <a href="
+                {{if .TextPart}}
+                {{.TextPart.URL false}}
+                {{else if .CalendarPart}}
+                {{.CalendarPart.URL false}}
+                {{else}}
+                {{.URL}}
+                {{end}}"
+            >
+              {{if .Envelope.Subject}}
+                {{.Envelope.Subject}}
+              {{else}}
+                (No subject)
+              {{end}}
+            </a>
+          </div>
+          <div class="message-list-date {{$classes}}">
+            {{ .Envelope.Date | humantime }}
+          </div>
+          {{ end }}
+
+          {{ end }}
+          {{if not .Messages}}
+          <p class="empty-list">Nothing here yet.</p>
+          {{end}}
+        </div>
+      </section>
+      <section class="actions">
+        {{ template "messages-header.html" . }}
+      </section>
+    </main>
+  </div>
+</div>
+{{template "foot.html"}}

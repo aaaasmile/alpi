@@ -1,0 +1,15 @@
+/alps
+/themes/*
+!/themes/sourcehut
+!/themes/alps
+/plugins/*
+!/plugins/base
+!/plugins/caldav
+!/plugins/carddav
+!/plugins/lua
+!/plugins/managesieve
+!/plugins/viewcalendar
+!/plugins/viewhtml
+!/plugins/viewtext
+log/server.log
+alpi.conf

@@ -1,0 +1,48 @@
+{{template "head.html" .}}
+{{template "nav.html" .}}
+
+<div class="page-wrap">
+  <aside>
+    <a href="/calendar/create" class="new active">New event</a>
+    <!-- TODO: fetch list of address books -->
+    <a href="#">{{.Calendar.Name}}</a>
+    <a href="#">Personal</a>
+  </aside>
+
+  <div class="container">
+    <main class="create-update">
+      {{$co := .CalendarObject}}
+      <h2>
+        {{if $co.CalendarObject}}Edit{{else}}Create{{end}} event
+      </h2>
+
+      <form method="post">
+        <label>
+          <span>Event name</span>
+          <input type="text" name="summary" id="summary" value="{{.Event.Props.Text "SUMMARY"}}">
+        </label>
+
+        <label class="event-date">
+          <span>Starts at</span>
+          <input type="date" name="start-date" id="start-date" value="{{(.Event.DateTimeStart nil).In .Location | formatinputdate}}"/>
+          <input type="time" name="start-time" id="start-time" value="{{(.Event.DateTimeStart nil).In .Location | formatinputtime}}"/>
+        </label>
+
+        <label class="event-date">
+          <span>Ends at</span>
+          <input type="date" name="end-date" id="end-date" value="{{(.Event.DateTimeEnd nil).In .Location | formatinputdate}}"/>
+          <input type="time" name="end-time" id="end-time" value="{{(.Event.DateTimeEnd nil).In .Location | formatinputtime}}"/>
+        </label>
+
+        <textarea name="description" id="description">{{.Event.Props.Text "DESCRIPTION"}}</textarea>
+
+        <div class="actions">
+          <button type="submit">Save</button>
+          <a class="button-link" href="{{if $co.CalendarObject}}{{$co.URL}}{{else}}/calendar{{end}}">Cancel</a>
+        </div>
+      </form>
+    </main>
+  </div>
+</div>
+
+{{template "foot.html"}}

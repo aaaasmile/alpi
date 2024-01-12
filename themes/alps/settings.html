@@ -1,0 +1,90 @@
+{{template "head.html" .}}
+{{template "nav.html" .}}
+
+<div class="page-wrap">
+  <aside>
+    <ul>
+      <li>
+        <a href="/mailbox/INBOX">« Back to inbox</a>
+      </li>
+    </ul>
+  </aside>
+
+  <div class="container">
+    <main class="settings">
+      <form method="post">
+        <div class="action-group">
+          <label for="from">Full name</label>
+          <input
+            type="text"
+            name="from"
+            id="from"
+            value="{{.Settings.From}}"
+          />
+        </div>
+
+        <div class="action-group">
+          <label for="signature">Message signature</label>
+          <textarea
+            name="signature"
+            id="signature"
+            rows="5"
+          >{{.Settings.Signature}}</textarea>
+        </div>
+
+        <div class="action-group">
+          <label for="subscriptions">Subscribed folders</label>
+          <select name="subscriptions" id="subscriptions" multiple>
+            {{ $subs := .Subscriptions }}
+            {{ range .Mailboxes }}
+            {{ if and (ne .Name "INBOX") (not (.HasAttr "\\Noselect")) }}
+            <option
+              value="{{.Name}}"
+              {{ if $subs.Has .Name }}
+              selected
+              {{ end }}
+            >{{.Name}}</option>
+            {{ end }}
+            {{ end }}
+          </select>
+        </div>
+
+        <div class="action-group">
+          <label for="messages_per_page">Messages per page</label>
+          <input
+            type="number"
+            name="messages_per_page"
+            id="messages_per_page"
+            value="{{.Settings.MessagesPerPage}}"
+            required />
+        </div>
+
+        <div class="action-group">
+          <label for="timezones">Timezone</label>
+          <select name="timezones" id="timezones">
+            {{ $zones := .Timezones }}
+            {{ $setting := .Settings.Timezone }}
+            <option
+              value="UTC"
+              {{if or (eq $setting "UTC") (not $setting)}}selected{{end}}
+            >UTC</option>
+            {{ range .Regions }}
+            <optgroup label="{{.}}">
+              {{ range (index $zones .) }}
+              <option
+                value="{{.}}"
+                {{if eq . $setting}}selected{{end}}
+              >{{.}}</option>
+              {{ end }}
+            </optgroup>
+            {{ end }}
+          </select>
+        </div>
+
+        <button type="submit">Save settings</button>
+      </form>
+    </main>
+  </div>
+</div>
+
+{{template "foot.html"}}
