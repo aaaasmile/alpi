@@ -603,7 +603,7 @@ func handleCompose(ctx *websrv.Context, msg *OutgoingMessage, options *composeOp
 		}
 		_, saveAsDraft := formParams["save_as_draft"]
 
-		msg.From = ctx.FormValue("from")
+		msg.From = ctx.FormValue("from") // TODO fai in modo di avere il from
 		msg.To = parseStringList(ctx.FormValue("to"))
 		msg.Cc = parseStringList(ctx.FormValue("cc"))
 		msg.Bcc = parseStringList(ctx.FormValue("bcc"))
@@ -611,6 +611,10 @@ func handleCompose(ctx *websrv.Context, msg *OutgoingMessage, options *composeOp
 		msg.Text = ctx.FormValue("text")
 		msg.InReplyTo = ctx.FormValue("in_reply_to")
 		msg.MessageID = ctx.FormValue("message_id")
+
+		if msg.From == "" {
+			return fmt.Errorf("the From is not set")
+		}
 
 		form, err := ctx.MultipartForm()
 		if err != nil {
