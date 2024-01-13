@@ -9,3 +9,7 @@ Se si usa il log file nel config, l'output del server va nel file di log.
 # Problemi nel Compose
 Per mandare emails, il login va effettuato con un indirizzo email valido e non solo con 
 l'username.
+
+## Settare il service
+Guarda il file readme_hetzner per quanto riguarda la creazione di un sub domain. Su github
+non ho messo nessuna info a riguardo, anche negli altri services.
