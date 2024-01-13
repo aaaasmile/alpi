@@ -5,3 +5,7 @@ Ho tolto delle parti che non mi interessano ed ho cambiato l'organizzazione dei 
 Il file di configurazione example.conf va editato e messo sotto il nome alpi.conf.
 Il frontend parte in localhost:1323 secondo il conf file.
 Se si usa il log file nel config, l'output del server va nel file di log.
+
+# Problemi nel Compose
+Per mandare emails, il login va effettuato con un indirizzo email valido e non solo con 
+l'username.

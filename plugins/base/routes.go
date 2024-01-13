@@ -595,6 +595,9 @@ func handleCompose(ctx *websrv.Context, msg *OutgoingMessage, options *composeOp
 			Address: ctx.Session.Username(),
 		})
 	}
+	if msg.From == "" {
+		return fmt.Errorf("please login with a valid email address, From couldn't be empty")
+	}
 
 	if ctx.Request().Method == http.MethodPost {
 		formParams, err := ctx.FormParams()
@@ -603,7 +606,7 @@ func handleCompose(ctx *websrv.Context, msg *OutgoingMessage, options *composeOp
 		}
 		_, saveAsDraft := formParams["save_as_draft"]
 
-		msg.From = ctx.FormValue("from") // TODO fai in modo di avere il from
+		msg.From = ctx.FormValue("from")
 		msg.To = parseStringList(ctx.FormValue("to"))
 		msg.Cc = parseStringList(ctx.FormValue("cc"))
 		msg.Bcc = parseStringList(ctx.FormValue("bcc"))
