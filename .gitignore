@@ -13,3 +13,5 @@
 !/plugins/viewtext
 log/server.log
 alpi.conf
+alpi.bin
+deploy_app.sh
