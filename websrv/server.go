@@ -17,7 +17,7 @@ import (
 )
 
 const (
-	buildnr = "00.20240112.01.00"
+	buildnr = "00.20260909.02.00"
 )
 
 func AppVersion() string {

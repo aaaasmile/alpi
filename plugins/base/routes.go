@@ -1,6 +1,7 @@
 package alpsbase
 
 import (
+	"alpi/otp"
 	"alpi/websrv"
 	"bytes"
 	"fmt"
@@ -52,6 +53,7 @@ func registerRoutes(p *websrv.GoPlugin) {
 	p.POST("/login", handleLogin)
 
 	p.GET("/logout", handleLogout)
+	p.GET("/newOtp", handleNewOtp)
 
 	p.GET("/compose", handleComposeNew)
 	p.POST("/compose", handleComposeNew)
@@ -390,6 +392,24 @@ func handleLogout(ctx *websrv.Context) error {
 	ctx.SetSessionLoginToken("", "")
 	ctx.SetRememberLoginToken("", "")
 	return ctx.Redirect(http.StatusFound, "/login")
+}
+
+func handleNewOtp(ctx *websrv.Context) error {
+	if ctx.Session == nil {
+		return echo.NewHTTPError(http.StatusUnauthorized, "authentication required")
+	}
+
+	issuer := ctx.Server.Config.OTP.Issuer
+	tk := otp.NewOtpToken(issuer)
+	if err := tk.GenerateKey(ctx.Session.Username()); err != nil {
+		return fmt.Errorf("failed to generate OTP key: %v", err)
+	}
+
+	return ctx.JSON(http.StatusOK, map[string]string{
+		"issuer":  issuer,
+		"account": ctx.Session.Username(),
+		"secret":  tk.GetSecret(),
+	})
 }
 
 type MessageRenderData struct {

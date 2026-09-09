@@ -40,6 +40,11 @@ type SessionConfig struct {
 	AttachmentCacheSize int64         `ini:"-"`
 }
 
+type OTPConfig struct {
+	Issuer string `ini:"issuer"`
+	Secret string `ini:"secret"`
+}
+
 type AlpsConfig struct {
 	General  GeneralConfig  `ini:"general"`
 	Server   ServerConfig   `ini:"server"`
@@ -47,6 +52,7 @@ type AlpsConfig struct {
 	Log      LogConfig      `ini:"log"`
 	Security SecurityConfig `ini:"security"`
 	Session  SessionConfig  `ini:"session"`
+	OTP      OTPConfig      `ini:"otp"`
 }
 
 func LoadConfig(filename string, themesPath string) (*AlpsConfig, error) {
