@@ -4,6 +4,10 @@
   <section>
     <h1>Enter OTP Code</h1>
 
+    {{if .Error}}
+    <p class="error">{{.Error}}</p>
+    {{end}}
+
     <form method="post" action="/CodeOtp">
       <div class="action-group">
         <label for="code">Six-digit code</label>

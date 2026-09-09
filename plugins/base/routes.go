@@ -57,6 +57,7 @@ func registerRoutes(p *websrv.GoPlugin) {
 	p.GET("/newOtp", handleNewOtp)
 	p.GET("/QRCodeOtp", handleQRCodeOtp)
 	p.GET("/CodeOtp", handleCodeOtp)
+	p.POST("/CodeOtp", handleCodeOtp)
 
 	p.GET("/compose", handleComposeNew)
 	p.POST("/compose", handleComposeNew)
@@ -444,8 +445,30 @@ func handleQRCodeOtp(ctx *websrv.Context) error {
 	})
 }
 
+type CodeOtpRenderData struct {
+	websrv.BaseRenderData
+	Error string
+}
+
 func handleCodeOtp(ctx *websrv.Context) error {
-	return ctx.Render(http.StatusOK, "code-otp.html", websrv.NewBaseRenderData(ctx))
+	renderData := &CodeOtpRenderData{
+		BaseRenderData: *websrv.NewBaseRenderData(ctx),
+	}
+
+	if ctx.Request().Method == http.MethodPost {
+		issuer := ctx.Server.Config.OTP.Issuer
+		tk := otp.NewOtpToken(issuer)
+		inputCode := ctx.FormValue("code")
+		if !tk.CheckCode(inputCode, ctx.Server.Config.OTP.Secret) {
+			renderData.Error = "Invalid OTP code"
+			return ctx.Render(http.StatusUnauthorized, "code-otp.html", renderData)
+		}
+
+		ctx.Session.PutNotice("OTP code verified.")
+		return ctx.Redirect(http.StatusFound, "/mailbox/INBOX")
+	}
+
+	return ctx.Render(http.StatusOK, "code-otp.html", renderData)
 }
 
 type MessageRenderData struct {
