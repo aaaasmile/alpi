@@ -254,8 +254,9 @@ func (s *Server) Logger() echo.Logger {
 //	ctx := ectx.(*alps.Context)
 type Context struct {
 	echo.Context
-	Server  *Server
-	Session *Session // nil if user isn't logged in
+	Server         *Server
+	Session        *Session // nil if user isn't logged in
+	PendingSession *Session // only available while completing OTP login
 }
 
 var aLongTimeAgo = time.Unix(233431200, 0)
@@ -275,6 +276,34 @@ func (ctx *Context) SetSession(s *Session) {
 		cookie.Expires = aLongTimeAgo // unset the cookie
 	}
 	ctx.SetCookie(&cookie)
+}
+
+func (ctx *Context) SetPendingSession(s *Session) {
+	cookie := http.Cookie{
+		Name:     ctx.Server.Config.Security.CookieName + "_pending",
+		HttpOnly: true,
+		SameSite: http.SameSiteStrictMode,
+		Secure:   ctx.IsTLS(),
+		Path:     "/CodeOtp",
+	}
+	if s == nil {
+		cookie.Expires = aLongTimeAgo
+	} else {
+		cookie.Value = s.token
+	}
+	ctx.SetCookie(&cookie)
+}
+
+func (ctx *Context) PromotePendingSession() error {
+	if ctx.PendingSession == nil {
+		return ErrSessionExpired
+	}
+
+	ctx.Session = ctx.PendingSession
+	ctx.PendingSession = nil
+	ctx.SetPendingSession(nil)
+	ctx.SetSession(ctx.Session)
+	return nil
 }
 
 type loginToken struct {
@@ -389,7 +418,7 @@ func isPublic(path string) bool {
 		parts := strings.Split(path, "/")
 		return len(parts) >= 4 && parts[3] == "assets"
 	}
-	return path == "/login" || strings.HasPrefix(path, "/themes/")
+	return path == "/login" || path == "/CodeOtp" || strings.HasPrefix(path, "/themes/")
 }
 
 func redirectToLogin(ctx *Context) error {
@@ -475,6 +504,18 @@ func New(e *echo.Echo, config *config.AlpsConfig) (*Server, error) {
 
 			cookie, err := ctx.Cookie(ctx.Server.Config.Security.CookieName)
 			if err == http.ErrNoCookie {
+				if ctx.Request().URL.Path == "/CodeOtp" {
+					pendingCookie, pendingErr := ctx.Cookie(ctx.Server.Config.Security.CookieName + "_pending")
+					if pendingErr == nil {
+						ctx.PendingSession, pendingErr = ctx.Server.Sessions.get(pendingCookie.Value)
+						if pendingErr == ErrSessionExpired {
+							ctx.SetPendingSession(nil)
+							ctx.PendingSession = nil
+						} else if pendingErr != nil {
+							return pendingErr
+						}
+					}
+				}
 				return handleUnauthenticated(next, ctx)
 			} else if err != nil {
 				return err

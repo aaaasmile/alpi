@@ -373,7 +373,7 @@ func handleLogin(ctx *websrv.Context) error {
 			}
 			return fmt.Errorf("failed to put connection in pool: %v", err)
 		}
-		ctx.SetSession(s)
+		ctx.SetPendingSession(s)
 
 		ctx.SetSessionLoginToken(username, password)
 		if remember == "on" {
@@ -391,6 +391,8 @@ func handleLogout(ctx *websrv.Context) error {
 	ctx.SetSession(nil)
 	ctx.SetSessionLoginToken("", "")
 	ctx.SetRememberLoginToken("", "")
+	ctx.PendingSession = nil
+	ctx.SetPendingSession(nil)
 	return ctx.Redirect(http.StatusFound, "/login")
 }
 
@@ -450,14 +452,21 @@ func handleCodeOtp(ctx *websrv.Context) error {
 	renderData := &CodeOtpRenderData{
 		BaseRenderData: *websrv.NewBaseRenderData(ctx),
 	}
+	if ctx.PendingSession == nil {
+		return echo.NewHTTPError(http.StatusUnauthorized, "OTP login session expired")
+	}
 
 	if ctx.Request().Method == http.MethodPost {
+
 		issuer := ctx.Server.Config.OTP.Issuer
 		tk := otp.NewOtpToken(issuer)
 		inputCode := ctx.FormValue("code")
 		if !tk.CheckCode(inputCode, ctx.Server.Config.OTP.Secret) {
 			renderData.Error = "Invalid OTP code"
 			return ctx.Render(http.StatusUnauthorized, "code-otp.html", renderData)
+		}
+		if err := ctx.PromotePendingSession(); err != nil {
+			return echo.NewHTTPError(http.StatusUnauthorized, "OTP login session expired")
 		}
 		ctx.Session.PutNotice("OTP code verified.")
 
