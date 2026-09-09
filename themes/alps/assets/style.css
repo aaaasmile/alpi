@@ -78,7 +78,7 @@ select {
 }
 /** { box-sizing: content-box; }*/
 body { font-family: arial,sans-serif; font-size: 13px; padding: 0; margin: 0;
-  min-width: 1024px; min-height: 100vh; display: flex; flex-direction: column;
+  min-width: 0; min-height: 100vh; display: flex; flex-direction: column;
 }
 
 input[type="text"],
@@ -933,3 +933,128 @@ button:active,
 .filter-list-active.filter-list-name,
 .filter-list-active.filter-list-status { font-weight: bold; }
 .filter-list-disabled.filter-list-name { opacity: 0.7; }
+
+@media (max-width: 700px) {
+  header nav,
+  footer {
+    padding: 0.5rem;
+  }
+
+  header nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem 1rem;
+  }
+
+  header nav > a,
+  header nav div > a {
+    margin: 0;
+  }
+
+  header nav div {
+    float: none;
+    width: 100%;
+    order: 2;
+  }
+
+  .page-wrap {
+    flex-direction: column;
+  }
+
+  aside {
+    flex: 0 0 auto;
+    width: 100%;
+    border-bottom: 1px solid #e0e0e0;
+    overflow-x: auto;
+  }
+
+  aside ul {
+    display: flex;
+    width: max-content;
+    min-width: 100%;
+  }
+
+  aside li {
+    width: auto;
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+
+  aside hr {
+    display: none;
+  }
+
+  main,
+  main.create-update {
+    padding: 0.5rem;
+  }
+
+  .actions-wrap,
+  .actions-message,
+  .actions-contacts,
+  .actions-filter {
+    flex-wrap: wrap;
+  }
+
+  .actions-message {
+    width: 100%;
+  }
+
+  .actions-wrap .action-group {
+    margin-bottom: 0.3rem;
+  }
+
+  .actions-search {
+    flex-basis: 100%;
+    margin-top: 0.3rem;
+  }
+
+  .actions-pagination {
+    margin: 0.3rem 0 0;
+  }
+
+  .message-grid {
+    grid-template-columns: auto minmax(4rem, 1fr) auto minmax(5rem, 2fr) auto;
+  }
+
+  .message-list .messages .message-grid > *,
+  .contact-list .contacts .contact-grid > *,
+  .filter-list .filters .filter-grid > * {
+    padding: 0.3rem 0.2rem;
+  }
+
+  main.create-update .headers {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  main.create-update .headers label {
+    margin-top: 0.5rem;
+  }
+
+  main.create-update #attachment-list {
+    width: 100%;
+    height: auto;
+    max-height: 12rem;
+  }
+
+  main.message .message-header {
+    flex-direction: column;
+  }
+
+  main.message .message-header .parts {
+    width: 100%;
+    margin: 0;
+  }
+
+  main.contact dl {
+    grid-template-columns: 1fr;
+    grid-gap: 0.2rem;
+  }
+
+  main table {
+    display: block;
+    overflow-x: auto;
+  }
+}
