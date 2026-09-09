@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"net/textproto"
 	"net/url"
+	"os"
 	"regexp"
 	"sort"
 	"strconv"
@@ -421,9 +422,20 @@ func handleNewOtp(ctx *websrv.Context) error {
 func handleQRCodeOtp(ctx *websrv.Context) error {
 	issuer := ctx.Server.Config.OTP.Issuer
 	tk := otp.NewOtpToken(issuer)
-	fn, err := tk.CreateQRFileFromSecret("qr", ctx.Session.Username(), ctx.Server.Config.OTP.Secret)
+
+	files, err := os.ReadDir("qr")
 	if err != nil {
-		return fmt.Errorf("failed to create OTP QR code: %v", err)
+		return fmt.Errorf("failed to read OTP QR code directory: %v", err)
+	}
+
+	var fn string
+	if len(files) == 0 {
+		fn, err = tk.CreateQRFileFromSecret("qr", ctx.Session.Username(), ctx.Server.Config.OTP.Secret)
+		if err != nil {
+			return fmt.Errorf("failed to create OTP QR code: %v", err)
+		}
+	} else {
+		fn = files[0].Name()
 	}
 
 	return ctx.JSON(http.StatusOK, map[string]string{
