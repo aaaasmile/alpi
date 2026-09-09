@@ -54,6 +54,7 @@ func registerRoutes(p *websrv.GoPlugin) {
 
 	p.GET("/logout", handleLogout)
 	p.GET("/newOtp", handleNewOtp)
+	p.GET("/QRCodeOtp", handleQRCodeOtp)
 
 	p.GET("/compose", handleComposeNew)
 	p.POST("/compose", handleComposeNew)
@@ -395,20 +396,38 @@ func handleLogout(ctx *websrv.Context) error {
 }
 
 func handleNewOtp(ctx *websrv.Context) error {
-	if ctx.Session == nil {
-		return echo.NewHTTPError(http.StatusUnauthorized, "authentication required")
-	}
+	issuer := ctx.Server.Config.OTP.Issuer
+	secret := ctx.Server.Config.OTP.Secret
+	if secret == "" {
+		tk := otp.NewOtpToken(issuer)
+		if err := tk.GenerateKey(ctx.Session.Username()); err != nil {
+			return fmt.Errorf("failed to generate OTP key: %v", err)
+		}
 
+		return ctx.JSON(http.StatusOK, map[string]string{
+			"issuer":  issuer,
+			"account": ctx.Session.Username(),
+			"secret":  tk.GetSecret(),
+		})
+	} else {
+		return ctx.JSON(http.StatusOK, map[string]string{
+			"issuer":  issuer,
+			"account": ctx.Session.Username(),
+			"secret":  "already set",
+		})
+	}
+}
+
+func handleQRCodeOtp(ctx *websrv.Context) error {
 	issuer := ctx.Server.Config.OTP.Issuer
 	tk := otp.NewOtpToken(issuer)
-	if err := tk.GenerateKey(ctx.Session.Username()); err != nil {
-		return fmt.Errorf("failed to generate OTP key: %v", err)
+	fn, err := tk.CreateQRFileFromSecret("qr", ctx.Session.Username(), ctx.Server.Config.OTP.Secret)
+	if err != nil {
+		return fmt.Errorf("failed to create OTP QR code: %v", err)
 	}
 
 	return ctx.JSON(http.StatusOK, map[string]string{
-		"issuer":  issuer,
-		"account": ctx.Session.Username(),
-		"secret":  tk.GetSecret(),
+		"filename": fn,
 	})
 }
 

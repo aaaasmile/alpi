@@ -12,6 +12,7 @@
 !/plugins/viewhtml
 !/plugins/viewtext
 log/server.log
+qr/*.*
 alpi.conf
 alpi.bin
 deploy_app.sh
