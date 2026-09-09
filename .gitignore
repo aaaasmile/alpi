@@ -15,3 +15,4 @@ log/server.log
 alpi.conf
 alpi.bin
 deploy_app.sh
+deploy_app_web.sh
