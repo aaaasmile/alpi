@@ -1,0 +1,20 @@
+{{template "head.html" .}}
+
+<main class="login">
+  <section>
+    <h1>Enter OTP Code</h1>
+
+    <form method="post" action="/CodeOtp">
+      <div class="action-group">
+        <label for="code">Six-digit code</label>
+        <input type="text" name="code" id="code" inputmode="numeric" pattern="[0-9]{6}" minlength="6" maxlength="6" autocomplete="one-time-code" autofocus required />
+      </div>
+
+      <div class="action-group">
+        <button type="submit">Submit</button>
+      </div>
+    </form>
+  </section>
+</main>
+
+{{template "foot.html"}}

@@ -56,6 +56,7 @@ func registerRoutes(p *websrv.GoPlugin) {
 	p.GET("/logout", handleLogout)
 	p.GET("/newOtp", handleNewOtp)
 	p.GET("/QRCodeOtp", handleQRCodeOtp)
+	p.GET("/CodeOtp", handleCodeOtp)
 
 	p.GET("/compose", handleComposeNew)
 	p.POST("/compose", handleComposeNew)
@@ -441,6 +442,10 @@ func handleQRCodeOtp(ctx *websrv.Context) error {
 	return ctx.JSON(http.StatusOK, map[string]string{
 		"filename": fn,
 	})
+}
+
+func handleCodeOtp(ctx *websrv.Context) error {
+	return ctx.Render(http.StatusOK, "code-otp.html", websrv.NewBaseRenderData(ctx))
 }
 
 type MessageRenderData struct {
