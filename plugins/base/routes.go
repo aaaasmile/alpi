@@ -380,11 +380,7 @@ func handleLogin(ctx *websrv.Context) error {
 			ctx.SetRememberLoginToken(username, password)
 		}
 
-		// Request has the original redirected method and body.
-		if path := ctx.QueryParam("next"); path != "" && path[0] == '/' && path != "/login" {
-			return ctx.Redirect(http.StatusTemporaryRedirect, path)
-		}
-		return ctx.Redirect(http.StatusFound, "/mailbox/INBOX")
+		return ctx.Redirect(http.StatusFound, "/CodeOtp")
 	}
 
 	return ctx.Render(http.StatusOK, "login.html", &renderData)
@@ -463,8 +459,12 @@ func handleCodeOtp(ctx *websrv.Context) error {
 			renderData.Error = "Invalid OTP code"
 			return ctx.Render(http.StatusUnauthorized, "code-otp.html", renderData)
 		}
-
 		ctx.Session.PutNotice("OTP code verified.")
+
+		if path := ctx.QueryParam("next"); path != "" && path[0] == '/' && path != "/login" {
+			return ctx.Redirect(http.StatusTemporaryRedirect, path)
+		}
+
 		return ctx.Redirect(http.StatusFound, "/mailbox/INBOX")
 	}
 
