@@ -13,3 +13,10 @@ l'username.
 ## Settare il service
 Guarda il file readme_hetzner per quanto riguarda la creazione di un sub domain. Su github
 non ho messo nessuna info a riguardo, anche negli altri services.
+
+### Sviluppo
+basta usare 
+
+    go run .\main.go 
+in windows. I cambiamenti dei files template html vengono attualizzati all'istante.
+Il login funziona senza problemi in quanto si collega all'imap server per il login.
